@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=720, initial-scale=1.0, user-scalable=no">
+  <title>Farm Game</title>
+  <style>
+    html, body {
+      padding: 0; margin: 0;
+      width: 100vw; height: 100vh;
+      background: #a6df73;
+      overflow: hidden;
+    }
+    #game-root {
+      position: relative;
+      width: 720px;
+      height: 1280px;
+      margin: 0 auto;
+      background: url('img/backround.png') no-repeat center center/cover;
+      box-shadow: 0 8px 24px #0004;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .topbar {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 86px;
+      display: flex; align-items: center; gap: 32px;
+      padding: 12px 24px 0 24px;
+      background: linear-gradient(180deg, #f8fbe8bb 60%, transparent 100%);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 36px; font-weight: bold; color: #5d4400;
+      z-index: 10; user-select: none;
+      box-sizing: border-box;
+    }
+    .bar-item {
+      display: flex; align-items: center;
+      background: #fffde788;
+      border-radius: 18px;
+      padding: 6px 18px 6px 8px;
+      box-shadow: 0 2px 8px #0001;
+      min-width: 94px; min-height: 48px;
+      margin-right: 10px; justify-content: center;
+    }
+    .bar-item img { height: 48px; width: 48px; margin-right: 8px; }
+    .bar-item span {
+      min-width: 40px;
+      font-size: 32px;
+      color: #5d4400;
+      text-shadow: 0 2px 4px #fffb;
+      font-weight: bold;
+      margin-left: 4px;
+      display: inline-block;
+    }
+    .energy-bar { min-width: 94px; }
+    .settings-btn {
+      margin-left: auto;
+      background: none; border: none; outline: none;
+      cursor: pointer; padding: 0; transition: transform .1s;
+    }
+    .settings-btn:active { transform: scale(0.93); }
+    .settings-btn img { width: 56px; height: 56px; filter: drop-shadow(0 2px 8px #0002); }
+    .bottombar {
+      position: absolute; bottom: 0; left: 0;
+      width: 100%; height: 116px;
+      display: flex; align-items: center; justify-content: space-evenly;
+      background: linear-gradient(0deg, #fffde8dd 85%, transparent 100%);
+      z-index: 12; box-sizing: border-box;
+      padding: 0 10px 18px 10px;
+    }
+    .bottombar-btn {
+      background: #ffd875cc; border: 4px solid #efbc7a;
+      border-radius: 24px; box-shadow: 0 2px 8px #0002;
+      width: 94px; height: 94px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+      margin: 0 4px; transition: transform 0.12s, box-shadow 0.15s;
+    }
+    .bottombar-btn:active { transform: scale(0.95); }
+    .bottombar-btn img { width: 68px; height: 68px; pointer-events: none; }
+    .panel-modal {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -48%);
+      background: #fffbe7; border-radius: 36px;
+      box-shadow: 0 8px 40px #0006;
+      min-width: 450px; min-height: 220px;
+      z-index: 99; display: none;
+      flex-direction: column; align-items: center;
+      padding: 40px 40px 36px 40px;
+      animation: popin .18s;
+    }
+    @keyframes popin {
+      0% {transform: scale(.7); opacity:0;}
+      100% {transform: scale(1); opacity:1;}
+    }
+    .panel-header {
+      font-size: 32px; color: #724c10; font-weight: bold;
+      margin-bottom: 22px; letter-spacing: 1.2px;
+    }
+    .close-panel {
+      position: absolute; right: 32px; top: 24px;
+      font-size: 36px; color: #b05f4d; background: none;
+      border: none; cursor: pointer; font-family: Arial; font-weight: bold; z-index: 10;
+    }
+    .close-panel:hover { color: #d22; }
+    .inventory-list {
+      width: 100%; display: flex; flex-direction: column;
+      gap: 22px; max-height: 380px; overflow-y: auto; margin-bottom: 8px;
+    }
+    .item-row {
+      display: flex; align-items: center; gap: 20px;
+      font-size: 25px; color: #623f09;
+      background: #fff7dfd0; border-radius: 20px;
+      padding: 8px 18px; box-shadow: 0 1px 5px #0001;
+    }
+    .item-row img { width: 48px; height: 48px; border-radius: 12px; }
+    .item-row .inv-qty { font-size: 26px; font-weight: bold; min-width: 54px; text-align: center; }
+    .item-row .inv-price { display: flex; align-items: center; gap: 6px; margin-left: auto; font-size: 24px; color: #b38119; font-weight: bold; }
+    .sell-btn {
+      background: #f4e29f; border: 2px solid #ebc972; border-radius: 12px;
+      padding: 5px 22px; font-size: 20px; margin-left: 12px; cursor: pointer; font-weight: bold; transition: background .13s;
+    }
+    .sell-btn:active { background: #e3d091; }
+    .inv-max { font-size: 18px; color: #b08b36; text-align: right; margin: 10px 0 -10px auto; width: 100%; }
+    .tasks-list {
+      width: 100%; display: flex; flex-direction: column;
+      gap: 18px; margin-bottom: 22px; max-height: 300px; overflow-y: auto;
+    }
+    .task-row {
+      background: #f9f7e3; border-radius: 14px;
+      padding: 10px 22px 10px 14px; font-size: 22px; color: #613e09;
+      font-weight: 500; display: flex; align-items: center; gap: 16px;
+    }
+    .task-done { text-decoration: line-through; color: #8a8a8a; }
+    .collect-reward-btn {
+      margin-top: 16px; background: #ffd455; border: 2px solid #efbc7a; border-radius: 18px;
+      padding: 8px 38px; font-size: 24px; color: #714c00; font-weight: bold;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; opacity: 0.95; pointer-events: none; transition: filter .12s, opacity .12s;
+    }
+    .collect-reward-btn.enabled {
+      filter: drop-shadow(0 4px 18px #ffd73eab); opacity: 1; pointer-events: auto;
+    }
+    .reward-coin-anim {
+      position: fixed; left: 50%; bottom: 140px; width: 76px; height: 76px;
+      z-index: 500; pointer-events: none;
+      animation: flygold 1s cubic-bezier(.6,-0.02,.95,.41);
+    }
+    @keyframes flygold {
+      0% {transform: translate(-50%, 0) scale(1.0); opacity:1;}
+      50% {transform: translate(-50%, -140px) scale(1.1); opacity:1;}
+      100% {transform: translate(340px, -46px) scale(0.55); opacity:0.1;}
+    }
+    .modal-bg {
+      position: absolute; z-index: 100;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #0007; display: none;
+      align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .modal {
+      background: #fffbe7; border-radius: 32px;
+      box-shadow: 0 8px 40px #0006;
+      padding: 38px 38px 32px 38px;
+      display: flex; flex-direction: column; align-items: center; min-width: 340px; gap: 26px; position: relative; animation: popin .2s;
+    }
+    .close-btn {
+      position: absolute; top: 20px; right: 28px; font-size: 34px; color: #b05f4d; background: none; border: none; cursor: pointer; font-family: Arial; font-weight: bold; transition: color .2s;
+    }
+    .close-btn:hover { color: #d22; }
+    .switch-row { display: flex; align-items: center; font-size: 26px; gap: 20px; justify-content: flex-start; width: 100%; }
+    .switch { position: relative; width: 66px; height: 36px; display: inline-block; }
+    .switch input { display: none; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background: #e9ce5a; border-radius: 36px; transition: background .2s;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 28px; width: 28px; left: 4px; bottom: 4px; background-color: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 2px 8px #0002;
+    }
+    input:checked + .slider { background: #60cf72; }
+    input:checked + .slider:before { transform: translateX(30px); }
+    /* FIELD AREA */
+    .field-area {
+      position: absolute;
+      right: 60px;
+      top: 180px;
+      width: 290px;
+      height: 290px;
+      z-index: 8;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .15s;
+    }
+    .field-area.dragging { opacity: 0.7; cursor: move; }
+    .field-img {
+      width: 100%; height: 100%; object-fit: contain;
+      cursor: pointer; transition: filter .1s;
+      filter: drop-shadow(0 6px 18px #0002);
+    }
+    .field-panel {
+      position: absolute;
+      left: 0; top: 0;
+      background: #fffdeee8;
+      border-radius: 20px;
+      box-shadow: 0 6px 30px #0004;
+      min-width: 120px;
+      padding: 10px 20px 10px 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      z-index: 90;
+      animation: popin .18s;
+      user-select: none;
+    }
+    .field-panel-btn {
+      width: 50px; height: 50px;
+      margin: 0 2px; cursor: pointer;
+      border: none; background: none; padding: 0;
+      filter: drop-shadow(0 2px 6px #0001);
+      transition: transform .11s;
+    }
+    .field-panel-btn:active { transform: scale(0.94);}
+    .bw { filter: grayscale(1) brightness(0.8) contrast(1.3);}
+    .gold-fly-anim {
+      position: absolute; z-index: 130;
+      pointer-events: none;
+      width: 54px; height: 54px;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      animation: gold-fly 0.85s cubic-bezier(.53,-0.02,.95,.41);
+    }
+    @keyframes gold-fly {
+      0% {transform: translate(-50%, -50%) scale(1);}
+      80% {transform: translate(-330px, -430px) scale(1.08);}
+      100% {transform: translate(-340px, -52px) scale(0.67); opacity: 0.2;}
+    }
+    .wheat-fly-anim {
+      position: absolute; z-index: 130;
+      pointer-events: none;
+      width: 48px; height: 48px;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      animation: wheat-fly 1s cubic-bezier(.53,-0.02,.95,.41);
+    }
+    @keyframes wheat-fly {
+      0% {transform: translate(-50%, -50%) scale(1);}
+      90% {transform: translate(-330px, 650px) scale(1.12);}
+      100% {transform: translate(-310px, 715px) scale(0.75); opacity: 0.1;}
+    }
+    /* Bina */
+    .building-area {
+      position: absolute;
+      left: 30px; top: 220px;
+      z-index: 7;
+    }
+    .building-block {
+      position: absolute;
+      width: 210px; height: 210px;
+      user-select: none;
+      transition: opacity .14s;
+    }
+    .building-img {
+      width: 100%; height: 100%; cursor: pointer;
+      transition: filter .16s;
+      filter: grayscale(1) brightness(.8) contrast(1.1);
+      border-radius: 16px;
+      box-shadow: 0 2px 18px #0002;
+      background: none;
+      pointer-events: auto;
+    }
+    .building-img.active { filter: none; }
+    .building-block.dragging { opacity: .7; cursor: move; z-index: 99; }
+    .purchase-popup {
+      position: absolute;
+      left: 50%; top: -38px;
+      transform: translateX(-50%);
+      background: #fff6c1;
+      border-radius: 12px;
+      padding: 7px 26px;
+      box-shadow: 0 2px 14px #0003;
+      font-size: 25px;
+      color: #844d1a;
+      font-weight: bold;
+      display: flex; align-items: center; gap: 12px;
+      z-index: 100;
+      animation: popin .16s;
+    }
+    .purchase-btn {
+      background: #f8db66;
+      border: 2px solid #dbb733;
+      border-radius: 8px;
+      padding: 3px 18px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 14px;
+      transition: background .13s;
+    }
+    .purchase-btn:active { background: #edd054; }
+    .building-panel {
+      position: absolute;
+      left: 50%; top: 0;
+      transform: translateX(-50%);
+      background: #fffbe7;
+      border-radius: 24px;
+      box-shadow: 0 4px 18px #0004;
+      min-width: 220px; min-height: 110px;
+      padding: 22px 16px 16px 16px;
+      z-index: 101;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      animation: popin .15s;
+    }
+    .building-panel .close-panel {
+      position: absolute; right: 10px; top: 6px; font-size: 28px; color: #a45d1f;
+    }
+    .building-title {
+      font-size: 24px;
+      color: #703d10;
+      font-weight: bold;
+      margin-bottom: 9px;
+      text-align: center;
+    }
+    .building-panel .level-indicator {
+      margin-bottom: 10px;
+      font-size: 17px;
+      color: #b28723;
+    }
+    .build-action-row {
+      display: flex; align-items: center; gap: 13px;
+      margin: 13px 0;
+      min-height: 40px;
+    }
+    .build-action-row img { height: 34px; }
+    .build-action-btn {
+      background: #f8db66; border: 2px solid #dbb733; border-radius: 12px;
+      font-size: 20px; font-weight: bold; padding: 5px 19px;
+      margin-top: 8px; cursor: pointer; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 7px;
+      transition: background .13s;
+    }
+    .build-action-btn:active { background: #edd054; }
+    .disabled-btn { opacity: 0.5; pointer-events: none; }
+    .upgrade-row {
+      margin-top: 16px;
+      font-size: 18px;
+      color: #885110;
+      display: flex; align-items: center; gap: 14px;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .upgrade-btn {
+      background: #c0e38b;
+      border: 2px solid #91b048;
+      border-radius: 10px;
+      padding: 4px 16px;
+      font-size: 17px;
+      margin-left: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .upgrade-btn:active { background: #b2ce76; }
+  </style>
+</head>
+<body>
+  <div id="game-root">
+    <div class="topbar">
+      <div class="bar-item" id="gold-bar"><img src="img/icongold.png"><span id="gold-amount"></span></div>
+      <div class="bar-item energy-bar" id="energy-bar"><img src="img/iconenergy.png"><span id="energy-amount"></span></div>
+      <div class="bar-item" id="diamond-bar"><img src="img/icondiamond.png"><span id="diamond-amount"></span></div>
+      <button class="settings-btn" id="settingsBtn"><img src="img/iconsettings.png"></button>
+    </div>
+    <div class="bottombar">
+      <div class="bottombar-btn" id="mapBtn"><img src="img/iconmap.png"></div>
+      <div class="bottombar-btn" id="storeBtn"><img src="img/iconstore.png"></div>
+      <div class="bottombar-btn" id="tasksBtn"><img src="img/icontasks.png"></div>
+      <div class="bottombar-btn" id="barnBtn"><img src="img/iconbarn.png"></div>
+    </div>
+    <div class="panel-modal" id="barnPanel">
+      <button class="close-panel" id="closeBarn">×</button>
+      <div class="panel-header">Barn</div>
+      <div class="inv-max" id="barnMax"></div>
+      <div class="inventory-list" id="inventoryList"></div>
+    </div>
+    <div class="panel-modal" id="tasksPanel">
+      <button class="close-panel" id="closeTasks">×</button>
+      <div class="panel-header">Tasks</div>
+      <div class="tasks-list" id="tasksList"></div>
+      <button class="collect-reward-btn" id="collectReward" disabled>
+        <img src="img/icongold.png" style="width:36px; height:36px;"> 200
+      </button>
+    </div>
+    <img src="img/icongold.png" style="display:none;" class="reward-coin-anim" id="rewardAnim">
+    <div class="modal-bg" id="modalBg">
+      <div class="modal">
+        <button class="close-btn" id="closeModal">×</button>
+        <h2>Settings</h2>
+        <div class="switch-row">
+          <span>Sound</span>
+          <label class="switch">
+            <input type="checkbox" id="soundSwitch" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="switch-row">
+          <span>Music</span>
+          <label class="switch">
+            <input type="checkbox" id="musicSwitch" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <!-- FIELD AREA -->
+    <div class="field-area" id="fieldArea">
+      <img id="fieldImg" class="field-img" src="img/field.png" alt="Field">
+      <div id="fieldPanel" class="field-panel" style="display:none;">
+        <button id="plantBtn" class="field-panel-btn"><img id="seedImg" src="img/iconseed.png" width="48"></button>
+        <button id="harvestBtn" class="field-panel-btn"><img id="sickleImg" src="img/iconsickle.png" width="48"></button>
+      </div>
+    </div>
+    <!-- BUILDINGS -->
+    <div class="building-area">
+      <div class="building-block" id="building-oven" style="top:0px; left:0px;">
+        <img src="img/oven.png" class="building-img" id="img-oven">
+        <div class="purchase-popup" id="popup-oven" style="display:none;">
+          <img src="img/icongold.png" style="width:32px;height:32px;">
+          <span id="price-oven">100</span>
+          <button class="purchase-btn" onclick="purchaseBuilding('oven')">Buy</button>
+        </div>
+        <div class="building-panel" id="panel-oven">
+          <button class="close-panel" onclick="closeBuildingPanel('oven')">×</button>
+          <div class="building-title">Oven</div>
+          <div class="level-indicator" id="level-oven"></div>
+          <div class="build-action-row" id="oven-action"></div>
+          <div class="upgrade-row" id="upgrade-oven"></div>
+        </div>
+      </div>
+      <div class="building-block" id="building-waterwell" style="top:230px; left:0px;">
+        <img src="img/waterwell.png" class="building-img" id="img-waterwell">
+        <div class="purchase-popup" id="popup-waterwell" style="display:none;">
+          <img src="img/icongold.png" style="width:32px;height:32px;">
+          <span id="price-waterwell">150</span>
+          <button class="purchase-btn" onclick="purchaseBuilding('waterwell')">Buy</button>
+        </div>
+        <div class="building-panel" id="panel-waterwell">
+          <button class="close-panel" onclick="closeBuildingPanel('waterwell')">×</button>
+          <div class="building-title">Water Well</div>
+          <div class="level-indicator" id="level-waterwell"></div>
+          <div class="build-action-row" id="waterwell-action"></div>
+          <div class="upgrade-row" id="upgrade-waterwell"></div>
+        </div>
+      </div>
+      <div class="building-block" id="building-windmill" style="top:460px; left:0px;">
+        <img src="img/windmill.png" class="building-img" id="img-windmill">
+        <div class="purchase-popup" id="popup-windmill" style="display:none;">
+          <img src="img/icongold.png" style="width:32px;height:32px;">
+          <span id="price-windmill">200</span>
+          <button class="purchase-btn" onclick="purchaseBuilding('windmill')">Buy</button>
+        </div>
+        <div class="building-panel" id="panel-windmill">
+          <button class="close-panel" onclick="closeBuildingPanel('windmill')">×</button>
+          <div class="building-title">Windmill</div>
+          <div class="level-indicator" id="level-windmill"></div>
+          <div class="build-action-row" id="windmill-action"></div>
+          <div class="upgrade-row" id="upgrade-windmill"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Animations -->
+    <img src="img/icongold.png" style="display:none;" id="goldFlyAnim" class="gold-fly-anim">
+    <img src="img/iconwheat.png" style="display:none;" id="wheatFlyAnim" class="wheat-fly-anim">
+    <img src="img/iconbread.png" style="display:none;" id="breadFlyAnim" class="wheat-fly-anim">
+    <img src="img/iconwater.png" style="display:none;" id="waterFlyAnim" class="wheat-fly-anim">
+    <img src="img/iconflour.png" style="display:none;" id="flourFlyAnim" class="wheat-fly-anim">
+    <img src="img/iconeurokuro.png" style="display:none;" id="eurokuroFlyAnim" class="wheat-fly-anim">
+    <img src="img/iconcookie.png" style="display:none;" id="cookieFlyAnim" class="wheat-fly-anim">
+  </div>
+  <script>
+    // Oyun deðiþkenleri
+    let gold = 100, energy = 25, energyMax = 25, diamond = 10;
+    const items = [
+      { key: 'wheat', name: 'Wheat', qty: 5, price: 5, img: 'img/iconwheat.png' },
+      { key: 'water', name: 'Water', qty: 3, price: 7, img: 'img/iconwater.png' },
+      { key: 'flour', name: 'Flour', qty: 0, price: 10, img: 'img/iconflour.png' },
+      { key: 'bread', name: 'Bread', qty: 0, price: 30, img: 'img/iconbread.png' },
+      { key: 'eurokuro', name: 'Salty Cookie', qty: 0, price: 60, img: 'img/iconeurokuro.png' },
+      { key: 'cookie', name: 'Cookie', qty: 0, price: 100, img: 'img/iconcookie.png' },
+    ];
+    let maxBarn = 100;
+    items.forEach(i => i.qty_sold = 0);
+    let tasks = [
+      { desc: 'Sell 1 wheat', check: () => items[0].qty_sold >= 1, done: false },
+      { desc: 'Sell 5 products', check: () => items.reduce((a, i) => a + (i.qty_sold||0), 0) >= 5, done: false },
+      { desc: 'Sell 3 different products', check: () => items.filter(i => (i.qty_sold||0)>0).length >= 3, done: false },
+    ];
+
+    // Bina fiyatlarý ve seviye bilgileri
+    const buildings = {
+      oven:    { price:200, owned:false, lvl:0, max:3, busy:false, prodTimer:null, progress:0, levels:[
+        { upgrade:220, desc:"Flour + Water › Bread", needs:{flour:1,water:1,energy:3}, prod:{bread:1}, time:60, icon:"iconbread.png" },
+        { upgrade:280, desc:"Flour x2 + Water x2 › Salty Cookie", needs:{flour:2,water:2,energy:4}, prod:{eurokuro:1}, time:60, icon:"iconeurokuro.png" },
+        { upgrade:320, desc:"Flour x3 + Water x3 › Cookie", needs:{flour:3,water:3,energy:5}, prod:{cookie:1}, time:60, icon:"iconcookie.png" }
+      ] },
+      waterwell:{ price:150, owned:false, lvl:0, max:3, busy:false, stock:0, prodTimer:null, lastTime:0, levels:[
+        { upgrade:160, desc:"+1 Water in 90s (max 5)",  prod:{water:1}, stockMax:5, time:90 },
+        { upgrade:200, desc:"+1 Water in 60s (max 10)", prod:{water:1}, stockMax:10, time:60 },
+        { upgrade:220, desc:"+1 Water in 30s (max 15)", prod:{water:1}, stockMax:15, time:30 }
+      ] },
+      windmill:{ price:100, owned:false, lvl:0, max:3, busy:false, prodTimer:null, progress:0, levels:[
+        { upgrade:150, desc:"1 Wheat › 1 Flour (30s)", needs:{wheat:1}, prod:{flour:1}, time:30 },
+        { upgrade:200, desc:"2 Wheat › 2 Flour (30s)", needs:{wheat:2}, prod:{flour:2}, time:30 },
+        { upgrade:250, desc:"3 Wheat › 3 Flour (30s)", needs:{wheat:3}, prod:{flour:3}, time:30 }
+      ] }
+    };
+
+    // Tüm oyun mekanikleri (barlar, depo, görevler, tarla) -- deðiþmedi.
+    function updateBars() {
+      document.getElementById('gold-amount').textContent = gold;
+      document.getElementById('energy-amount').textContent = `${energy}/${energyMax}`;
+      document.getElementById('diamond-amount').textContent = diamond;
+    }
+    function totalBarnQty() { return items.reduce((a,i)=>a+i.qty,0); }
+    function findItem(key) { return items.find(x=>x.key===key); }
+    function updateBarn() {
+      document.getElementById('barnMax').textContent = `Barn capacity: ${totalBarnQty()}/${maxBarn}`;
+      const el = document.getElementById('inventoryList');
+      el.innerHTML = '';
+      for (const item of items) {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `<img src="${item.img}"><span>${item.name}</span>
+          <span class='inv-qty'>${item.qty}</span>
+          <span class='inv-price'>${item.price} <img src='img/icongold.png' style='width:22px;vertical-align:middle'></span>
+          <button class='sell-btn' ${item.qty==0?'disabled':''}>Sell</button>`;
+        row.querySelector('.sell-btn').onclick = () => {
+          if(item.qty > 0) {
+            gold += item.price;
+            item.qty--;
+            item.qty_sold = (item.qty_sold||0)+1;
+            updateBarn(); updateBars(); updateTasks();
+          }
+        };
+        el.appendChild(row);
+      }
+    }
+    function updateTasks() {
+      const el = document.getElementById('tasksList');
+      el.innerHTML = '';
+      let allDone = true;
+      for (let i=0;i<tasks.length;i++) {
+        const t = tasks[i];
+        t.done = t.check();
+        const row = document.createElement('div');
+        row.className = 'task-row'+(t.done?' task-done':'');
+        row.textContent = `${i===0?'Easy':i===1?'Medium':'Hard'}: ${t.desc}`;
+        el.appendChild(row);
+        if (!t.done) allDone = false;
+      }
+      const rewardBtn = document.getElementById('collectReward');
+      if (allDone) { rewardBtn.classList.add('enabled'); rewardBtn.disabled = false; }
+      else { rewardBtn.classList.remove('enabled'); rewardBtn.disabled = true; }
+    }
+    document.getElementById('collectReward').onclick = function() {
+      if(this.disabled) return;
+      gold += 200; updateBars();
+      this.disabled = true; this.classList.remove('enabled');
+      const anim = document.getElementById('rewardAnim');
+      anim.style.display = 'block';
+      anim.style.animation = 'flygold 1s cubic-bezier(.6,-0.02,.95,.41)';
+      setTimeout(()=>{anim.style.display='none';},1000);
+    };
+    document.getElementById('storeBtn').onclick = () => alert('Store coming soon!');
+    document.getElementById('mapBtn').onclick = () => alert('Map coming soon!');
+    const barnPanel = document.getElementById('barnPanel');
+    const barnBtn = document.getElementById('barnBtn');
+    const closeBarn = document.getElementById('closeBarn');
+    barnBtn.onclick = () => { barnPanel.style.display = 'flex'; updateBarn(); }
+    closeBarn.onclick = () => { barnPanel.style.display = 'none'; };
+    const tasksPanel = document.getElementById('tasksPanel');
+    const tasksBtn = document.getElementById('tasksBtn');
+    const closeTasks = document.getElementById('closeTasks');
+    tasksBtn.onclick = () => { tasksPanel.style.display = 'flex'; updateTasks(); }
+    closeTasks.onclick = () => { tasksPanel.style.display = 'none'; };
+    const settingsBtn = document.getElementById('settingsBtn');
+    const modalBg = document.getElementById('modalBg');
+    const closeModal = document.getElementById('closeModal');
+    settingsBtn.onclick = () => { modalBg.style.display = 'flex'; }
+    closeModal.onclick = () => { modalBg.style.display = 'none'; }
+    modalBg.onclick = (e) => { if (e.target === modalBg) modalBg.style.display = 'none'; }
+    document.getElementById('soundSwitch').onchange = () => {};
+    document.getElementById('musicSwitch').onchange = () => {};
+    updateBars();
+
+    // FIELD MECHANIC (ayný)
+    let fieldState = "empty";
+    let fieldTimer = null;
+    function updateFieldVisual() {
+      const fieldImg = document.getElementById('fieldImg');
+      const seedImg = document.getElementById('seedImg');
+      const sickleImg = document.getElementById('sickleImg');
+      if(fieldState === "empty") {
+        fieldImg.src = "img/field.png";
+        seedImg.classList.remove("bw");
+        sickleImg.classList.add("bw");
+      } else if(fieldState === "planted") {
+        fieldImg.src = "img/fieldfide.png";
+        seedImg.classList.add("bw");
+        sickleImg.classList.add("bw");
+      } else if(fieldState === "growing") {
+        fieldImg.src = "img/fieldgreenwheat.png";
+        seedImg.classList.add("bw");
+        sickleImg.classList.add("bw");
+      } else if(fieldState === "ready") {
+        fieldImg.src = "img/fieldwheatrh.png";
+        seedImg.classList.add("bw");
+        sickleImg.classList.remove("bw");
+      }
+    }
+    updateFieldVisual();
+    const fieldArea = document.getElementById('fieldArea');
+    let dragData = {dragging: false, offsetX: 0, offsetY: 0, timer: null, startX: 0, startY: 0};
+    function getRootOffset() {
+      const rect = document.getElementById('game-root').getBoundingClientRect();
+      return {left: rect.left + window.scrollX, top: rect.top + window.scrollY};
+    }
+    function startFieldLongPress(e) {
+      if (dragData.dragging) return;
+      dragData.startX = (e.touches ? e.touches[0].clientX : e.clientX);
+      dragData.startY = (e.touches ? e.touches[0].clientY : e.clientY);
+      dragData.timer = setTimeout(() => {
+        dragData.dragging = true;
+        fieldArea.classList.add("dragging");
+        document.body.style.cursor = "move";
+      }, 600);
+    }
+    function moveFieldDrag(e) {
+      if (!dragData.dragging) return;
+      let x = (e.touches ? e.touches[0].clientX : e.clientX);
+      let y = (e.touches ? e.touches[0].clientY : e.clientY);
+      const rootOffset = getRootOffset();
+      let gx = x - rootOffset.left - fieldArea.offsetWidth/2;
+      let gy = y - rootOffset.top - fieldArea.offsetHeight/2;
+      gx = Math.max(0, Math.min(720 - fieldArea.offsetWidth, gx));
+      gy = Math.max(0, Math.min(1280 - fieldArea.offsetHeight - 116, gy));
+      fieldArea.style.left = gx + "px";
+      fieldArea.style.top = gy + "px";
+      fieldArea.style.right = "";
+    }
+    function stopFieldDrag(e) {
+      clearTimeout(dragData.timer);
+      if (dragData.dragging) {
+        dragData.dragging = false;
+        fieldArea.classList.remove("dragging");
+        document.body.style.cursor = "";
+      }
+    }
+    function cancelLongPress(e) { clearTimeout(dragData.timer);}
+    fieldArea.style.position = "absolute";
+    fieldArea.style.left = "370px";
+    fieldArea.style.top = "180px";
+    fieldArea.style.right = "";
+    fieldArea.addEventListener("mousedown", startFieldLongPress);
+    fieldArea.addEventListener("touchstart", startFieldLongPress);
+    window.addEventListener("mousemove", moveFieldDrag);
+    window.addEventListener("touchmove", moveFieldDrag);
+    window.addEventListener("mouseup", stopFieldDrag);
+    window.addEventListener("touchend", stopFieldDrag);
+    fieldArea.addEventListener("mouseleave", cancelLongPress);
+    fieldArea.addEventListener("touchcancel", cancelLongPress);
+    const fieldPanel = document.getElementById("fieldPanel");
+    document.getElementById("fieldImg").onclick = function(e) {
+      if (dragData.dragging) return false;
+      fieldPanel.style.display = "flex";
+      fieldPanel.style.left = "12px";
+      fieldPanel.style.top = "12px";
+      updateFieldVisual();
+      document.onclick = (ev) => {
+        if (!fieldPanel.contains(ev.target) && ev.target !== document.getElementById("fieldImg")) {
+          fieldPanel.style.display = "none";
+          document.onclick = null;
+        }
+      };
+    };
+    document.getElementById("plantBtn").onclick = function() {
+      if (fieldState !== "empty" || gold <= 0) return;
+      gold--;
+      updateBars();
+      let anim = document.getElementById('goldFlyAnim');
+      anim.style.display = "block";
+      anim.style.animation = "none";
+      anim.offsetHeight;
+      anim.style.animation = null;
+      setTimeout(()=>{anim.style.display='none';}, 850);
+      fieldState = "planted";
+      updateFieldVisual();
+      fieldPanel.style.display = "none";
+      fieldTimer = setTimeout(() => {
+        fieldState = "growing";
+        updateFieldVisual();
+        fieldTimer = setTimeout(() => {
+          fieldState = "ready";
+          updateFieldVisual();
+        }, 15000);
+      }, 15000);
+    };
+    document.getElementById("harvestBtn").onclick = function() {
+      if (fieldState !== "ready") return;
+      fieldState = "empty";
+      updateFieldVisual();
+      fieldPanel.style.display = "none";
+      let anim = document.getElementById('wheatFlyAnim');
+      anim.style.display = "block";
+      anim.style.animation = "none";
+      anim.offsetHeight;
+      anim.style.animation = null;
+      setTimeout(()=>{anim.style.display='none';}, 1000);
+      findItem('wheat').qty++;
+      updateBars();
+      updateBarn();
+    };
+
+    // --- Bina Drag/Drop ---
+    for (const bname of ["oven", "waterwell", "windmill"]) {
+      const block = document.getElementById("building-"+bname);
+      let drag = {dragging:false,timer:null,startX:0,startY:0,origX:0,origY:0};
+      block.addEventListener("mousedown", e => {
+        if (drag.dragging) return;
+        drag.startX = e.clientX;
+        drag.startY = e.clientY;
+        drag.origX = parseInt(block.style.left||"0");
+        drag.origY = parseInt(block.style.top||"0");
+        drag.timer = setTimeout(() => {
+          drag.dragging = true;
+          block.classList.add("dragging");
+        }, 600);
+      });
+      block.addEventListener("mouseup", e => {
+        clearTimeout(drag.timer);
+        if (drag.dragging) {
+          drag.dragging = false;
+          block.classList.remove("dragging");
+        }
+      });
+      block.addEventListener("mouseleave", () => clearTimeout(drag.timer));
+      block.addEventListener("mousemove", e => {
+        if (!drag.dragging) return;
+        let nx = drag.origX + (e.clientX-drag.startX);
+        let ny = drag.origY + (e.clientY-drag.startY);
+        nx = Math.max(0, Math.min(510, nx));
+        ny = Math.max(0, Math.min(950, ny));
+        block.style.left = nx+"px";
+        block.style.top = ny+"px";
+      });
+      block.addEventListener("touchstart", e => {
+        if (drag.dragging) return;
+        drag.startX = e.touches[0].clientX;
+        drag.startY = e.touches[0].clientY;
+        drag.origX = parseInt(block.style.left||"0");
+        drag.origY = parseInt(block.style.top||"0");
+        drag.timer = setTimeout(() => {
+          drag.dragging = true;
+          block.classList.add("dragging");
+        }, 600);
+      });
+      block.addEventListener("touchend", e => {
+        clearTimeout(drag.timer);
+        if (drag.dragging) {
+          drag.dragging = false;
+          block.classList.remove("dragging");
+        }
+      });
+      block.addEventListener("touchmove", e => {
+        if (!drag.dragging) return;
+        let nx = drag.origX + (e.touches[0].clientX-drag.startX);
+        let ny = drag.origY + (e.touches[0].clientY-drag.startY);
+        nx = Math.max(0, Math.min(510, nx));
+        ny = Math.max(0, Math.min(950, ny));
+        block.style.left = nx+"px";
+        block.style.top = ny+"px";
+        e.preventDefault();
+      }, {passive:false});
+    }
+
+    // --- Satýn alma, panel açma, panel güncelle ---
+    for (const bname of ["oven", "waterwell", "windmill"]) {
+      const img = document.getElementById("img-"+bname);
+      img.onclick = function(e) {
+        if (buildings[bname].owned) {
+          openBuildingPanel(bname);
+        } else {
+          document.getElementById("popup-"+bname).style.display="flex";
+          setTimeout(()=>{document.getElementById("popup-"+bname).style.display="none"},2000);
+        }
+      };
+    }
+    function purchaseBuilding(bname) {
+      if (gold < buildings[bname].price) return;
+      gold -= buildings[bname].price;
+      buildings[bname].owned = true;
+      document.getElementById("img-"+bname).classList.add("active");
+      document.getElementById("popup-"+bname).style.display="none";
+      openBuildingPanel(bname);
+      updateBars();
+    }
+    function openBuildingPanel(bname) {
+      for (const n of ["oven","waterwell","windmill"])
+        document.getElementById("panel-"+n).style.display="none";
+      document.getElementById("panel-"+bname).style.display="flex";
+      updateBuildingPanel(bname);
+    }
+    function closeBuildingPanel(bname) {
+      document.getElementById("panel-"+bname).style.display="none";
+    }
+    function updateBuildingPanel(bname) {
+      const b = buildings[bname];
+      const lvl = b.lvl;
+      document.getElementById("level-"+bname).textContent = `Level ${lvl+1}`;
+      // Action/Production row
+      let actionRow = document.getElementById(bname+"-action");
+      let actionHtml = "";
+      if(bname==="oven") {
+        const lvldata = b.levels[lvl];
+        if(b.busy) {
+          actionHtml = `<span>Producing...</span>`;
+        } else {
+          actionHtml = `
+          <img src="img/iconflour.png"> + <img src="img/iconwater.png"> <span>=</span>
+          <img src="img/${lvldata.icon}">
+          <button class="build-action-btn" onclick="startOvenProd()">
+            Produce
+          </button>`;
+        }
+      } else if(bname==="windmill") {
+        const lvldata = b.levels[lvl];
+        if(b.busy) {
+          actionHtml = `<span>Producing...</span>`;
+        } else {
+          actionHtml = `
+          <img src="img/iconwheat.png"> <span>›</span>
+          <img src="img/iconflour.png">
+          <button class="build-action-btn" onclick="startWindmillProd()">
+            Grind
+          </button>`;
+        }
+      } else if(bname==="waterwell") {
+        const lvldata = b.levels[lvl];
+        actionHtml = `<span>Stored: ${b.stock||0} / ${lvldata.stockMax}</span>
+        <button class="build-action-btn" onclick="collectWater()" ${b.stock>0?'':'disabled'}>
+          <img src="img/iconwater.png"> Collect All
+        </button>`;
+      }
+      actionRow.innerHTML = actionHtml;
+      // Upgrade row
+      let upgradeRow = document.getElementById("upgrade-"+bname);
+      if(lvl+1 < b.max) {
+        upgradeRow.innerHTML = `
+          Upgrade to Level ${lvl+2}
+          <button class="upgrade-btn" onclick="upgradeBuilding('${bname}')">
+            <img src="img/icongold.png" style="width:24px;vertical-align:middle"> ${b.levels[lvl].upgrade}
+          </button>
+        `;
+      } else upgradeRow.innerHTML = `<span>Max level!</span>`;
+    }
+    // Upgrade
+    function upgradeBuilding(bname) {
+      const b = buildings[bname];
+      let cost = b.levels[b.lvl].upgrade;
+      if (gold < cost || b.lvl+1 >= b.max) return;
+      gold -= cost;
+      b.lvl++;
+      updateBars();
+      updateBuildingPanel(bname);
+    }
+    // Waterwell timer
+    setInterval(()=>{
+      const b = buildings.waterwell;
+      if(!b.owned) return;
+      const lvl = b.lvl, lvldata = b.levels[lvl];
+      if(b.stock === undefined) b.stock=0;
+      if(b.stock < lvldata.stockMax) {
+        if(!b.lastTime) b.lastTime=Date.now();
+        if(Date.now()-b.lastTime > lvldata.time*1000) {
+          b.stock++;
+          b.lastTime = Date.now();
+          updateBuildingPanel('waterwell');
+        }
+      }
+    },500);
+    // Waterwell collect
+    window.collectWater = function() {
+      const b = buildings.waterwell;
+      if(!b.owned || !b.stock) return;
+      let stock = b.stock;
+      findItem('water').qty += stock;
+      b.stock = 0;
+      updateBarn(); updateBars();
+      updateBuildingPanel('waterwell');
+      let anim = document.getElementById('waterFlyAnim');
+      anim.style.display = "block";
+      anim.style.animation = "none"; anim.offsetHeight; anim.style.animation = null;
+      setTimeout(()=>{anim.style.display='none';}, 900);
+    };
+    // Oven production
+    window.startOvenProd = function() {
+      const b = buildings.oven, lvl = b.lvl, lvldata = b.levels[lvl];
+      if(b.busy) return;
+      let haveFlour = findItem('flour').qty >= (lvldata.needs.flour||0);
+      let haveWater = findItem('water').qty >= (lvldata.needs.water||0);
+      let haveEnergy = energy >= (lvldata.needs.energy||0);
+      if(!haveFlour || !haveWater || !haveEnergy) return;
+      findItem('flour').qty -= (lvldata.needs.flour||0);
+      findItem('water').qty -= (lvldata.needs.water||0);
+      energy -= (lvldata.needs.energy||0);
+      b.busy = true; updateBuildingPanel('oven'); updateBarn(); updateBars();
+      setTimeout(()=>{
+        let prodKey = Object.keys(lvldata.prod)[0];
+        findItem(prodKey).qty += lvldata.prod[prodKey];
+        b.busy = false;
+        updateBarn(); updateBuildingPanel('oven');
+        // Animasyon:
+        let animId = prodKey === "bread" ? 'breadFlyAnim' : prodKey === "eurokuro" ? 'eurokuroFlyAnim' : 'cookieFlyAnim';
+        let anim = document.getElementById(animId);
+        anim.style.display = "block";
+        anim.style.animation = "none"; anim.offsetHeight; anim.style.animation = null;
+        setTimeout(()=>{anim.style.display='none';}, 1000);
+      }, lvldata.time*1000);
+    }
+    // Windmill production
+    window.startWindmillProd = function() {
+      const b = buildings.windmill, lvl = b.lvl, lvldata = b.levels[lvl];
+      if(b.busy) return;
+      let haveWheat = findItem('wheat').qty >= (lvldata.needs.wheat||0);
+      if(!haveWheat) return;
+      findItem('wheat').qty -= (lvldata.needs.wheat||0);
+      b.busy = true; updateBuildingPanel('windmill'); updateBarn(); updateBars();
+      setTimeout(()=>{
+        let prodKey = Object.keys(lvldata.prod)[0];
+        findItem(prodKey).qty += lvldata.prod[prodKey];
+        b.busy = false;
+        updateBarn(); updateBuildingPanel('windmill');
+        // Animasyon:
+        let anim = document.getElementById('flourFlyAnim');
+        anim.style.display = "block";
+        anim.style.animation = "none"; anim.offsetHeight; anim.style.animation = null;
+        setTimeout(()=>{anim.style.display='none';}, 1000);
+      }, lvldata.time*1000);
+    }
+    // Panel güncellemede actionlarý yeniden ekle!
+    setInterval(()=>{
+      if(document.getElementById('panel-oven').style.display==="flex") updateBuildingPanel('oven');
+      if(document.getElementById('panel-windmill').style.display==="flex") updateBuildingPanel('windmill');
+      if(document.getElementById('panel-waterwell').style.display==="flex") updateBuildingPanel('waterwell');
+    },1000);
+    // Ýlk güncellemeler
+    updateBars();
+    updateBarn();
+    updateTasks();
+  </script>
+</body>
+</html>
