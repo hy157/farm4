@@ -970,6 +970,21 @@
     updateBars();
     updateBarn();
     updateTasks();
+    function scaleGameRoot() {
+      const baseWidth = 720, baseHeight = 1280;
+      const root = document.getElementById('game-root');
+      const ww = window.innerWidth, wh = window.innerHeight;
+      const scale = Math.min(ww/baseWidth, wh/baseHeight);
+      root.style.transform = `scale(${scale})`;
+      root.style.webkitTransform = `scale(${scale})`;
+      root.style.left = `calc(50% - ${(baseWidth*scale)/2}px)`;
+      root.style.top = `calc(50% - ${(baseHeight*scale)/2}px)`;
+      root.style.right = "auto";
+      root.style.bottom = "auto";
+    }
+    window.addEventListener('resize', scaleGameRoot);
+    window.addEventListener('orientationchange', scaleGameRoot);
+    window.addEventListener('DOMContentLoaded', scaleGameRoot);    
   </script>
 </body>
 </html>
