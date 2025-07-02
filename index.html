@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Responsive viewport ayarı -->
+  <!-- Mobil ve responsive uyumlu viewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, viewport-fit=cover">
   <title>Farm Game</title>
   <style>
@@ -32,8 +32,20 @@
       will-change: transform;
       touch-action: manipulation;
       left: 0; top: 0;
+      /* Responsive scale ayarı mobil için */
     }
-    /* Aşağıdan itibaren CSS'in aynen devamı */
+    @media (max-width: 720px), (max-height: 1280px) {
+      #game-root {
+        width: 100vw !important;
+        height: 100vh !important;
+        min-width: 320px;
+        min-height: 480px;
+        max-width: 720px;
+        max-height: 1280px;
+        border-radius: 0;
+      }
+    }
+    /* Diğer CSS senin verdiğin gibi */
     .topbar {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 86px;
@@ -192,7 +204,6 @@
     }
     input:checked + .slider { background: #60cf72; }
     input:checked + .slider:before { transform: translateX(30px); }
-    /* FIELD AREA */
     .field-area {
       position: absolute;
       right: 60px;
@@ -259,7 +270,6 @@
       90% {transform: translate(-330px, 650px) scale(1.12);}
       100% {transform: translate(-310px, 715px) scale(0.75); opacity: 0.1;}
     }
-    /* Bina */
     .building-area {
       position: absolute;
       left: 30px; top: 220px;
@@ -425,7 +435,6 @@
         </div>
       </div>
     </div>
-    <!-- FIELD AREA -->
     <div class="field-area" id="fieldArea">
       <img id="fieldImg" class="field-img" src="img/field.png" alt="Field">
       <div id="fieldPanel" class="field-panel" style="display:none;">
@@ -433,7 +442,6 @@
         <button id="harvestBtn" class="field-panel-btn"><img id="sickleImg" src="img/iconsickle.png" width="48"></button>
       </div>
     </div>
-    <!-- BUILDINGS -->
     <div class="building-area">
       <div class="building-block" id="building-oven" style="top:0px; left:0px;">
         <img src="img/oven.png" class="building-img" id="img-oven">
@@ -481,7 +489,6 @@
         </div>
       </div>
     </div>
-    <!-- Animations -->
     <img src="img/icongold.png" style="display:none;" id="goldFlyAnim" class="gold-fly-anim">
     <img src="img/iconwheat.png" style="display:none;" id="wheatFlyAnim" class="wheat-fly-anim">
     <img src="img/iconbread.png" style="display:none;" id="breadFlyAnim" class="wheat-fly-anim">
@@ -970,21 +977,6 @@
     updateBars();
     updateBarn();
     updateTasks();
-    function scaleGameRoot() {
-      const baseWidth = 720, baseHeight = 1280;
-      const root = document.getElementById('game-root');
-      const ww = window.innerWidth, wh = window.innerHeight;
-      const scale = Math.min(ww/baseWidth, wh/baseHeight);
-      root.style.transform = `scale(${scale})`;
-      root.style.webkitTransform = `scale(${scale})`;
-      root.style.left = `calc(50% - ${(baseWidth*scale)/2}px)`;
-      root.style.top = `calc(50% - ${(baseHeight*scale)/2}px)`;
-      root.style.right = "auto";
-      root.style.bottom = "auto";
-    }
-    window.addEventListener('resize', scaleGameRoot);
-    window.addEventListener('orientationchange', scaleGameRoot);
-    window.addEventListener('DOMContentLoaded', scaleGameRoot);    
   </script>
 </body>
 </html>
