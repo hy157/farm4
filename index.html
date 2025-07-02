@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, viewport-fit=cover">
+  <!-- Responsive viewport ayarı -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, viewport-fit=cover">
   <title>Farm Game</title>
   <style>
     html, body {
@@ -10,17 +11,29 @@
       width: 100vw; height: 100vh;
       background: #a6df73;
       overflow: hidden;
+      touch-action: manipulation;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-width: 100vw;
+      overflow: hidden;
     }
     #game-root {
-      position: relative;
+      position: absolute;
       width: 720px;
       height: 1280px;
-      margin: 0 auto;
       background: url('img/backround.png') no-repeat center center/cover;
       box-shadow: 0 8px 24px #0004;
       border-radius: 24px;
       overflow: hidden;
+      will-change: transform;
+      touch-action: manipulation;
+      left: 0; top: 0;
     }
+    /* Aşağıdan itibaren CSS'in aynen devamı */
     .topbar {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 86px;
